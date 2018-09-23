@@ -8,28 +8,47 @@
 ***/
 package step_definitions;
 
-import cucumber.api.java.en.*;
-import cucumber.api.PendingException;
+import static org.junit.Assert.assertEquals;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
 import implementation.Checkout;
-import static org.junit.Assert.*;
 
 public class CheckoutSteps {
-    Checkout checkout;
+	Map<String, Checkout> checkouts = new HashMap();
+	Map<String, Integer> prices = new HashMap();
+    Checkout checkout = new Checkout();
     int bananaPrice = 0;
 
     @Given("^the price of a \"(.*?)\" is (\\d+)c$")
     public void thePriceOfAIsC(String name, int price) throws Throwable {
-        bananaPrice = price;
+    	prices.put(name, price);
     }
 
     @When("^I checkout (\\d+) \"(.*?)\"$")
     public void iCheckout(int itemCount, String itemName) throws Throwable {
-        checkout = new Checkout();
-        checkout.add(itemCount, bananaPrice);
+    	Integer price = prices.get(itemName);
+    	assert(price != null);
+    	Checkout checkout = checkouts.get(itemName);
+    	if (checkout == null) {
+    		checkout = new Checkout();
+    	}
+        checkout.add(itemCount, price);
+        checkouts.put(itemName, checkout);
     }
 
     @Then("^the total price should be (\\d+)c$")
     public void theTotalPriceShouldBeC(int total) throws Throwable {
-        assertEquals(total, checkout.total());    
+    	int totalCheckouts = 0;
+    	for (Map.Entry<String, Checkout> checkoutEntry: checkouts.entrySet()){
+    		Checkout checkout = checkoutEntry.getValue();
+    		totalCheckouts += checkout.total();
+    		
+    	}
+        assertEquals(total, totalCheckouts);    
     }
 }
